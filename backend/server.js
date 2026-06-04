@@ -15,8 +15,14 @@ dotenv.config();
 
 const app = express();
 
-
-app.use(cors());
+console.log( process.env.FRONTEND_URL)
+app.use(cors({
+  origin:[
+    process.env.FRONTEND_URL
+  ],
+  credentials:true
+}
+));
 app.use(cookieParser())
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -36,9 +42,12 @@ mongoose
   .connect(process.env.MOGODB_URL)
   .then(() => {
     console.log("MongoDB connected");
-    app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
   })
   .catch((err) => {
     console.error("MongoDB connection error:", err.message);
     process.exit(1);
   });
+
+app.listen(PORT,()=>{
+ console.log('server connected on port',PORT)
+})
