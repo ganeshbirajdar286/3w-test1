@@ -27,7 +27,8 @@ const timeAgo = (dateStr) => {
   return `${Math.floor(diff / 86400)}d ago`;
 };
 
-const BASE_URL = import.meta.env.VITE_BAKEND_URL|| "http://localhost:4000/api";
+
+const BASE_URL = import.meta.env.VITE_BASE_URL || "http://localhost:4000/";
 
 const PostCard = ({ post, onDelete }) => {
   const { user } = useAuth();
