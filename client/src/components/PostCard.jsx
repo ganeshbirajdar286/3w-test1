@@ -27,7 +27,7 @@ const timeAgo = (dateStr) => {
   return `${Math.floor(diff / 86400)}d ago`;
 };
 
-const BASE_URL = import.meta.env.VITE_BAKEND_URL|| "http://localhost:5000";
+const BASE_URL = import.meta.env.VITE_BAKEND_URL|| "http://localhost:4000/api";
 
 const PostCard = ({ post, onDelete }) => {
   const { user } = useAuth();
@@ -81,6 +81,9 @@ const PostCard = ({ post, onDelete }) => {
 
   const avatarLetter = post.username?.[0]?.toUpperCase() || "?";
 
+console.log("BASE_URL:", BASE_URL);
+console.log("IMAGE URL:", `${BASE_URL}${post.image}`);
+  console.log(post.image);
   return (
     <div className="post-card">
       {/* Header */}
