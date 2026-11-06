@@ -1,0 +1,113 @@
+name: AI DevOps Agent Verification Sandbox
+
+on:
+  push:
+    branches:
+      - 'ai-devops-setup'
+      - 'ai-devops-*'
+  workflow_dispatch:
+    inputs:
+      health_port:
+        description: 'Exposed port to probe'
+        required: false
+        default: '8080'
+      health_path:
+        description: 'Healthcheck HTTP path'
+        required: false
+        default: '/'
+
+jobs:
+  verify-sandbox:
+    name: Cloud Sandbox Smoke-Test
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Prepare Sandbox Environment
+        run: |
+          echo "=== 0. Preparing Sandbox Environment Variables ==="
+          if [ -f .env.example ]; then
+            cp .env.example .env
+          else
+            touch .env
+          fi
+
+          echo "Configured environment variables in .env:"
+          sed 's/=.*/=******/' .env
+
+      - name: Validate Docker Compose Configuration
+        run: |
+          echo "=== 1. Validating Compose Specification ==="
+          docker compose config
+
+      - name: Boot Services with Docker Compose
+        run: |
+          echo "=== 2. Launching Containers in Background ==="
+          docker compose up -d --build
+
+      - name: Inspect Container Runtime Status
+        run: |
+          echo "=== 3. Container Status ==="
+          docker compose ps
+
+      - name: Probe Application Health
+        run: |
+          echo "=== 4. Probing Health Endpoint ==="
+
+          PORT="${{ github.event.inputs.health_port }}"
+          if [ -z "$PORT" ]; then
+            PORT="8080"
+          fi
+          PATH_URI="${{ github.event.inputs.health_path }}"
+          if [ -z "$PATH_URI" ]; then
+            PATH_URI="/"
+          fi
+          
+          if [ -n "$PORT" ]; then
+            echo "Waiting for service to accept traffic on http://localhost:$PORT$PATH_URI..."
+            for i in {1..20}; do
+              HTTP_CODE=$(curl -s -L -o /dev/null -w "%{http_code}" "http://localhost:$PORT$PATH_URI" || echo "000")
+              echo "Attempt $i: Probing http://localhost:$PORT$PATH_URI -> HTTP $HTTP_CODE"
+
+              # If configured path returned 404 and wasn't root '/', test root '/'
+              if [ "$HTTP_CODE" = "404" ] && [ "$PATH_URI" != "/" ]; then
+                ROOT_CODE=$(curl -s -L -o /dev/null -w "%{http_code}" "http://localhost:$PORT/" || echo "000")
+                if [ "$ROOT_CODE" != "000" ] && [ "$ROOT_CODE" != "000000" ]; then
+                  HTTP_CODE="$ROOT_CODE"
+                  echo "Attempt $i: Fallback probe http://localhost:$PORT/ -> HTTP $HTTP_CODE"
+                fi
+              fi
+
+              # Status 200-499 confirms the server has successfully booted and accepted the request
+              if [ "$HTTP_CODE" -ge 200 ] && [ "$HTTP_CODE" -lt 500 ]; then
+                echo "Healthcheck probe PASSED with HTTP $HTTP_CODE (Server is live and listening on port $PORT)!"
+                exit 0
+              fi
+
+              # Early exit if container has stopped, crashed, or is restarting
+              if [ "$HTTP_CODE" = "000" ] || [ "$HTTP_CODE" = "000000" ]; then
+                if docker compose ps | grep -qiE "exited|dead|restarting"; then
+                  echo "Container has exited or is crash-looping! Aborting wait."
+                  echo "--- CONTAINER RUNTIME CRASH LOGS ---"
+                  docker compose logs --no-color --tail=500
+                  exit 1
+                fi
+              fi
+
+              sleep 3
+            done
+            echo "Healthcheck probe FAILED: service did not respond within 60 seconds."
+            echo "--- BEGIN RAW CONTAINER LOGS ---"
+            docker compose logs --no-color --tail=500
+            echo "--- END RAW CONTAINER LOGS ---"
+            exit 1
+          fi
+
+      - name: Safe Teardown
+        if: always()
+        run: |
+          echo "=== 5. Cleaning Up Sandbox Containers ==="
+          docker compose down -v
