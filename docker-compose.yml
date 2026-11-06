@@ -3,7 +3,7 @@ services:
     build:
       context: backend
       dockerfile: Dockerfile
-    container_name: tmp570mmioi-backend
+    container_name: tmp29z606x1-backend
     restart: unless-stopped
     ports:
       - "5000:5000"
@@ -16,7 +16,7 @@ services:
     build:
       context: client
       dockerfile: Dockerfile
-    container_name: tmp570mmioi-client
+    container_name: tmp29z606x1-client
     restart: unless-stopped
     ports:
       - "80:80"
