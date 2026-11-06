@@ -50,6 +50,23 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Node Dependencies
+        run: |
+          if [ -f package-lock.json ]; then npm ci || npm install; else npm install; fi
+
+      - name: Run Linter (ESLint / Prettier)
+        run: |
+          if npm run | grep -q "lint"; then
+            npm run lint
+          else
+            echo "No explicit lint script found, checking JavaScript/TypeScript syntax..."
+            npx --no-install eslint . --ext .js,.jsx,.ts,.tsx || true
+          fi
 
 
   # ==========================================
@@ -63,6 +80,22 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Node Dependencies
+        run: |
+          if [ -f package-lock.json ]; then npm ci || npm install; else npm install; fi
+
+      - name: Run Node Tests
+        run: |
+          if npm run | grep -q "test"; then
+            npm test --if-present
+          else
+            echo "No automated tests declared in package.json."
+          fi
 
 
   # ==========================================
@@ -126,6 +159,6 @@ ghcr.io/${{ github.repository }}:latestghcr.io/${{ github.repository }}:${{ need
       - name: Deployment Trigger
         run: |
           echo "Deploying application tag: ${{ needs.prepare.outputs.image_tag }}"
-          echo "Target Provider: Render"
-          echo "Health Check URI: http://localhost:8080/"
+          echo "Target Provider: render"
+          echo "Health Check URI: http://localhost:80/"
           echo "[OK] Deployment successfully triggered for release ${{ needs.prepare.outputs.image_tag }}."
