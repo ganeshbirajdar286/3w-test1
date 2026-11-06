@@ -1,10 +1,24 @@
-# DevOps Configuration for tmpfhbur7tk
+# DevOps Configuration for tmp570mmioi
 
 This repository has been configured automatically by the **AI DevOps Agent**.
 
 ## Architecture Summary
 
-- **Repository Type:** Single Service
+- **Repository Type:** Monorepo
+- **Service `backend`:**
+  - Framework: `express`
+  - Language: `javascript`
+  - Package Manager: `npm`
+  - Exposed Port: `5000`
+  - Recommended Deployment Target: **Render**
+
+- **Service `client`:**
+  - Framework: `react_vite`
+  - Language: `javascript`
+  - Package Manager: `npm`
+  - Exposed Port: `80`
+  - Recommended Deployment Target: **Vercel**
+
 ## Running Locally with Docker Compose
 
 ```bash

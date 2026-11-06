@@ -10,7 +10,7 @@ on:
       health_port:
         description: 'Exposed port to probe'
         required: false
-        default: '8080'
+        default: '80'
       health_path:
         description: 'Healthcheck HTTP path'
         required: false
@@ -27,6 +27,12 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Prepare Sandbox Environment
+        env:
+          FRONTEND_URL: "${{ secrets.FRONTEND_URL }}"
+          JWT_SECRET: "${{ secrets.JWT_SECRET }}"
+          MOGODB_URL: "${{ secrets.MOGODB_URL }}"
+          VITE_BAKEND_URL: "${{ secrets.VITE_BAKEND_URL }}"
+          VITE_BASE_URL: "${{ secrets.VITE_BASE_URL }}"
         run: |
           echo "=== 0. Preparing Sandbox Environment Variables ==="
           if [ -f .env.example ]; then
@@ -35,8 +41,80 @@ jobs:
             touch .env
           fi
 
+          # Inject secrets from GitHub Actions or generate safe non-empty defaults
+          VAL="$FRONTEND_URL"
+          if [ -n "$VAL" ]; then
+            echo "Injecting secret for 'FRONTEND_URL' from GitHub Actions Secrets..."
+            sed -i '/^FRONTEND_URL=/d' .env 2>/dev/null || true
+            echo "FRONTEND_URL=$VAL" >> .env
+          else
+            # Ensure non-empty mock value so app doesn't crash on startup if secret is missing
+            if ! grep -q "^FRONTEND_URL=" .env 2>/dev/null || grep -q "^FRONTEND_URL=$" .env 2>/dev/null; then
+              echo "Injecting safe mock fallback for 'FRONTEND_URL'..."
+              sed -i '/^FRONTEND_URL=/d' .env 2>/dev/null || true
+              echo "FRONTEND_URL=http://localhost:80" >> .env
+            fi
+          fi
+          VAL="$JWT_SECRET"
+          if [ -n "$VAL" ]; then
+            echo "Injecting secret for 'JWT_SECRET' from GitHub Actions Secrets..."
+            sed -i '/^JWT_SECRET=/d' .env 2>/dev/null || true
+            echo "JWT_SECRET=$VAL" >> .env
+          else
+            # Ensure non-empty mock value so app doesn't crash on startup if secret is missing
+            if ! grep -q "^JWT_SECRET=" .env 2>/dev/null || grep -q "^JWT_SECRET=$" .env 2>/dev/null; then
+              echo "Injecting safe mock fallback for 'JWT_SECRET'..."
+              sed -i '/^JWT_SECRET=/d' .env 2>/dev/null || true
+              echo "JWT_SECRET=mock_jwt_secret_secret" >> .env
+            fi
+          fi
+          VAL="$MOGODB_URL"
+          if [ -n "$VAL" ]; then
+            echo "Injecting secret for 'MOGODB_URL' from GitHub Actions Secrets..."
+            sed -i '/^MOGODB_URL=/d' .env 2>/dev/null || true
+            echo "MOGODB_URL=$VAL" >> .env
+          else
+            # Ensure non-empty mock value so app doesn't crash on startup if secret is missing
+            if ! grep -q "^MOGODB_URL=" .env 2>/dev/null || grep -q "^MOGODB_URL=$" .env 2>/dev/null; then
+              echo "Injecting safe mock fallback for 'MOGODB_URL'..."
+              sed -i '/^MOGODB_URL=/d' .env 2>/dev/null || true
+              echo "MOGODB_URL=http://localhost:80" >> .env
+            fi
+          fi
+          VAL="$VITE_BAKEND_URL"
+          if [ -n "$VAL" ]; then
+            echo "Injecting secret for 'VITE_BAKEND_URL' from GitHub Actions Secrets..."
+            sed -i '/^VITE_BAKEND_URL=/d' .env 2>/dev/null || true
+            echo "VITE_BAKEND_URL=$VAL" >> .env
+          else
+            # Ensure non-empty mock value so app doesn't crash on startup if secret is missing
+            if ! grep -q "^VITE_BAKEND_URL=" .env 2>/dev/null || grep -q "^VITE_BAKEND_URL=$" .env 2>/dev/null; then
+              echo "Injecting safe mock fallback for 'VITE_BAKEND_URL'..."
+              sed -i '/^VITE_BAKEND_URL=/d' .env 2>/dev/null || true
+              echo "VITE_BAKEND_URL=http://localhost:80" >> .env
+            fi
+          fi
+          VAL="$VITE_BASE_URL"
+          if [ -n "$VAL" ]; then
+            echo "Injecting secret for 'VITE_BASE_URL' from GitHub Actions Secrets..."
+            sed -i '/^VITE_BASE_URL=/d' .env 2>/dev/null || true
+            echo "VITE_BASE_URL=$VAL" >> .env
+          else
+            # Ensure non-empty mock value so app doesn't crash on startup if secret is missing
+            if ! grep -q "^VITE_BASE_URL=" .env 2>/dev/null || grep -q "^VITE_BASE_URL=$" .env 2>/dev/null; then
+              echo "Injecting safe mock fallback for 'VITE_BASE_URL'..."
+              sed -i '/^VITE_BASE_URL=/d' .env 2>/dev/null || true
+              echo "VITE_BASE_URL=http://localhost:80" >> .env
+            fi
+          fi
           echo "Configured environment variables in .env:"
           sed 's/=.*/=******/' .env
+          # Propagate .env to service subdirectories if any exist
+          for d in */ ; do
+            if [ -d "$d" ]; then
+              cp .env "$d/.env" 2>/dev/null || true
+            fi
+          done
 
       - name: Validate Docker Compose Configuration
         run: |
@@ -59,7 +137,7 @@ jobs:
 
           PORT="${{ github.event.inputs.health_port }}"
           if [ -z "$PORT" ]; then
-            PORT="8080"
+            PORT="80"
           fi
           PATH_URI="${{ github.event.inputs.health_path }}"
           if [ -z "$PATH_URI" ]; then
