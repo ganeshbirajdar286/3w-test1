@@ -3,7 +3,7 @@ services:
     build:
       context: backend
       dockerfile: Dockerfile
-    container_name: tmpn0txnedb-backend
+    container_name: tmp31yyxnc4-backend
     restart: unless-stopped
     ports:
       - "5000:5000"
@@ -16,7 +16,7 @@ services:
     build:
       context: client
       dockerfile: Dockerfile
-    container_name: tmpn0txnedb-client
+    container_name: tmp31yyxnc4-client
     restart: unless-stopped
     ports:
       - "80:80"
