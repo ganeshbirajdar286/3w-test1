@@ -1,4 +1,4 @@
-# DevOps Configuration for tmpv85pzgsk
+# DevOps Configuration for social-app
 
 This repository has been configured automatically by the **AI DevOps Agent**.
 
