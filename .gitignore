@@ -1,0 +1,5 @@
+
+# Security: Environment variables and secrets
+.env
+*.env
+.env.*

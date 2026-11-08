@@ -3,7 +3,7 @@ services:
     build:
       context: backend
       dockerfile: Dockerfile
-    container_name: tmpevs2zzle-backend
+    container_name: tmpv85pzgsk-backend
     restart: unless-stopped
     ports:
       - "5000:5000"
@@ -16,7 +16,7 @@ services:
     build:
       context: client
       dockerfile: Dockerfile
-    container_name: tmpevs2zzle-client
+    container_name: tmpv85pzgsk-client
     restart: unless-stopped
     ports:
       - "80:80"
