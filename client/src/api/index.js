@@ -14,9 +14,9 @@ API.interceptors.request.use((config) => {
 });
 
 
-export const signup = (data) => API.post("/api/auth/signup", data);
-export const login = (data) => API.post("/api/auth/login", data);
-export const getMe = () => API.get("/api/auth/me");
+export const signup = (data) => API.post("/auth/signup", data);
+export const login = (data) => API.post("/auth/login", data);
+export const getMe = () => API.get("/auth/me");
 
 // Post endpoints
 export const getPosts = (page = 1, limit = 10) =>
