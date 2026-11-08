@@ -3,7 +3,7 @@ services:
     build:
       context: backend
       dockerfile: Dockerfile
-    container_name: tmpv85pzgsk-backend
+    container_name: social-app-backend
     restart: unless-stopped
     ports:
       - "5000:5000"
@@ -16,7 +16,7 @@ services:
     build:
       context: client
       dockerfile: Dockerfile
-    container_name: tmpv85pzgsk-client
+    container_name: social-app-client
     restart: unless-stopped
     ports:
       - "80:80"
